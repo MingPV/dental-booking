@@ -20,6 +20,9 @@ export class User {
 
   @Prop()
   tel: string;
+
+  @Prop()
+  role: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

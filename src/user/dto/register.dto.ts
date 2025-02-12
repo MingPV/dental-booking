@@ -12,4 +12,6 @@ export class RegisterDTO {
   @IsString()
   @IsOptional()
   readonly tel: string;
+  @IsString()
+  readonly role: string;
 }

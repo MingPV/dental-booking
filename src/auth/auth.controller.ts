@@ -27,4 +27,10 @@ export class AuthController {
       return { message: 'Failed to log in', error: error.message };
     }
   }
+
+  @Post('logout')
+  async logout(@Res({ passthrough: true }) res: Response) {
+    res.clearCookie('access_token');
+    return { message: 'Successfully logged out' };
+  }
 }
