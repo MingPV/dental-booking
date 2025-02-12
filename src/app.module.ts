@@ -8,6 +8,7 @@ import { ConfigModule } from '@nestjs/config';
 import { AppointmentsModule } from './appointments/appointments.module';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
+import { DentistsModule } from './dentists/dentists.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { UserModule } from './user/user.module';
     AppointmentsModule,
     AuthModule,
     UserModule,
+    DentistsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

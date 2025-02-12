@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Strategy } from 'passport-local';
 import { PassportStrategy } from '@nestjs/passport';

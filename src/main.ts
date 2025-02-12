@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
