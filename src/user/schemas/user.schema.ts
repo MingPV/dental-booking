@@ -20,6 +20,9 @@ export class User {
 
   @Prop()
   role: string;
+
+  @Prop()
+  hasAppointment: boolean;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

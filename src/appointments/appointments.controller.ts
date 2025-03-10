@@ -21,8 +21,8 @@ export class AppointmentsController {
 
   @UseGuards(AuthGuard('jwt'))
   @Post()
-  create(@Body() createAppointmentDto: CreateAppointmentDto) {
-    return this.appointmentsService.create(createAppointmentDto);
+  create(@Body() createAppointmentDto: CreateAppointmentDto, @Request() req) {
+    return this.appointmentsService.create(createAppointmentDto, req.user);
   }
 
   @UseGuards(AuthGuard('jwt'))

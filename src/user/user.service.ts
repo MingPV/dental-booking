@@ -1,9 +1,12 @@
-import { Injectable } from '@nestjs/common';
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User, UserDocument } from './schemas/user.schema'; // Import UserDocument
 
 import { RegisterDTO } from './dto/register.dto';
+import { UpdateUserDTO } from './dto/update-user.dto';
 
 @Injectable()
 export class UserService {
@@ -18,5 +21,35 @@ export class UserService {
 
   async findByEmail(email: string): Promise<UserDocument | null> {
     return await this.userModel.findOne({ email }).exec();
+  }
+
+  async updateAppointmentStatus(
+    userId: string,
+    status: boolean,
+  ): Promise<UserDocument | null> {
+    return await this.userModel
+      .findByIdAndUpdate(userId, { hasAppointment: status }, { new: true })
+      .exec();
+  }
+
+  async update(
+    id: string,
+    user: any,
+    updateUserDto: UpdateUserDTO,
+  ): Promise<UserDocument> {
+    if (user.role != 'admin') {
+      const userData = await this.findByEmail(user.email);
+      if (userData?.email != user.email) {
+        throw new NotFoundException(`You can edit only your user.`);
+      }
+    }
+
+    const updatedUser = await this.userModel
+      .findByIdAndUpdate(id, updateUserDto, { new: true })
+      .exec();
+    if (!updatedUser) {
+      throw new NotFoundException(`User with id ${id} not found`);
+    }
+    return updatedUser;
   }
 }

@@ -20,7 +20,11 @@ export class AppointmentsService {
 
   async create(
     createAppointmentDto: CreateAppointmentDto,
+    user: any,
   ): Promise<Appointment> {
+    if (user.hasAppointment) {
+      throw new NotFoundException(`user already has an appointment.`);
+    }
     const createdAppointment = new this.appointmentModel(createAppointmentDto);
     return createdAppointment.save();
   }

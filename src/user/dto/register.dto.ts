@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { IsString, IsNumber, IsOptional, IsEmail } from 'class-validator';
+import { IsString, IsOptional, IsEmail, IsBoolean } from 'class-validator';
 
 export class RegisterDTO {
   @IsEmail()
@@ -13,4 +12,6 @@ export class RegisterDTO {
   readonly tel: string;
   @IsString()
   readonly role: string;
+  @IsBoolean()
+  readonly hasAppointment: string;
 }
