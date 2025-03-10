@@ -10,4 +10,6 @@ export class CreateAppointmentDto {
   readonly price: number;
   @IsString()
   readonly user_email: string;
+  @IsString()
+  readonly dentist_id: string;
 }

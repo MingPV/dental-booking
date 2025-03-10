@@ -13,4 +13,7 @@ export class UpdateAppointmentDto {
   @IsString()
   @IsOptional()
   readonly user_email?: string;
+  @IsString()
+  @IsOptional()
+  readonly dentist_id?: string;
 }

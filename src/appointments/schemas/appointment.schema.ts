@@ -16,6 +16,9 @@ export class Appointment {
 
   @Prop()
   user_email: string;
+
+  @Prop()
+  dentist_id: string;
 }
 
 export const AppointmentSchema = SchemaFactory.createForClass(Appointment);
