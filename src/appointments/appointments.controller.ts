@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import {
   Controller,
   Get,
@@ -6,40 +7,49 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
+  Request,
 } from '@nestjs/common';
 import { AppointmentsService } from './appointments.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('appointments')
 export class AppointmentsController {
   constructor(private readonly appointmentsService: AppointmentsService) {}
 
+  @UseGuards(AuthGuard('jwt'))
   @Post()
   create(@Body() createAppointmentDto: CreateAppointmentDto) {
     return this.appointmentsService.create(createAppointmentDto);
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Get()
-  findAll() {
-    return this.appointmentsService.findAll();
+  findAll(@Request() req) {
+    return this.appointmentsService.findAll(req.user);
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.appointmentsService.findOne(id);
+  findOne(@Param('id') id: string, @Request() req) {
+    return this.appointmentsService.findOne(id, req.user);
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Patch(':id')
   update(
     @Param('id') id: string,
+    @Request() req,
     @Body() updateAppointmentDto: UpdateAppointmentDto,
   ) {
-    return this.appointmentsService.update(id, updateAppointmentDto);
+    return this.appointmentsService.update(id, req.user, updateAppointmentDto);
   }
 
+  @UseGuards(AuthGuard('jwt')) // ใช้ JWT ก่อน แล้วเช็ค Role
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.appointmentsService.delete(id);
+  remove(@Param('id') id: string, @Request() req) {
+    return this.appointmentsService.delete(id, req);
   }
 }

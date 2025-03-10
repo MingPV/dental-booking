@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   Injectable,
@@ -24,22 +25,46 @@ export class AppointmentsService {
     return createdAppointment.save();
   }
 
-  async findAll(): Promise<Appointment[]> {
-    return this.appointmentModel.find().exec();
+  async findAll(user: any): Promise<Appointment[]> {
+    if (user.role === 'admin') {
+      return this.appointmentModel.find(); // Admin เห็นทั้งหมด
+    }
+
+    return this.appointmentModel.find({ user_email: user.email }); // User เห็นแค่ของตัวเอง
+
+    // return this.appointmentModel.find().exec();
   }
 
-  async findOne(id: string): Promise<Appointment> {
+  async findOne(id: string, user: any): Promise<Appointment> {
     const appointment = await this.appointmentModel.findById(id).exec();
     if (!appointment) {
       throw new NotFoundException(`Appointment with ID ${id} not found`);
     }
+    if (user.role != 'admin') {
+      if (appointment.user_email != user.email) {
+        throw new NotFoundException(
+          `Appointment with ID ${id} is not your appointment!`,
+        );
+      }
+    }
+
     return appointment;
   }
 
   async update(
     id: string,
+    user: any,
     updateAppointmentDto: UpdateAppointmentDto,
   ): Promise<Appointment> {
+    if (user.role != 'admin') {
+      const appointment = await this.findOne(id, user);
+      if (appointment.user_email != user.email) {
+        throw new NotFoundException(
+          `Appointment with ID ${id} is not your appointment!`,
+        );
+      }
+    }
+
     const updatedAppointment = await this.appointmentModel
       .findByIdAndUpdate(id, updateAppointmentDto, { new: true })
       .exec();
@@ -50,8 +75,16 @@ export class AppointmentsService {
   }
 
   // Or you can do the same thing as above just show the example for try catch.
-  async delete(id: string): Promise<{ message: string }> {
+  async delete(id: string, user: any): Promise<{ message: string }> {
     try {
+      if (user.role != 'admin') {
+        const appointment = await this.findOne(id, user);
+        if (appointment.user_email != user.email) {
+          throw new NotFoundException(
+            `Appointment with ID ${id} is not your appointment!`,
+          );
+        }
+      }
       const result = await this.appointmentModel.findByIdAndDelete(id).exec();
       if (!result) {
         throw new NotFoundException(`Appointment with ID ${id} not found`);

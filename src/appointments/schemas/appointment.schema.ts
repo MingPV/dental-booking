@@ -13,6 +13,9 @@ export class Appointment {
 
   @Prop()
   price: number;
+
+  @Prop()
+  user_email: string;
 }
 
 export const AppointmentSchema = SchemaFactory.createForClass(Appointment);

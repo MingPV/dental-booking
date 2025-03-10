@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { IsString, IsNumber, IsOptional } from 'class-validator';
 
 export class CreateAppointmentDto {
@@ -9,4 +8,6 @@ export class CreateAppointmentDto {
   readonly description?: string;
   @IsNumber()
   readonly price: number;
+  @IsString()
+  readonly user_email: string;
 }
