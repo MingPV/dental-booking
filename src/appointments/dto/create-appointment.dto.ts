@@ -24,7 +24,8 @@ export class CreateAppointmentDto {
   readonly dentist_id: string;
 
   @IsString()
-  readonly status: string;
+  @IsOptional()
+  readonly status: string = 'pending';
 
   @IsDateString()
   readonly appointment_date: Date;

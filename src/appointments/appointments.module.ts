@@ -3,6 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { AppointmentsService } from './appointments.service';
 import { AppointmentsController } from './appointments.controller';
 import { Appointment, AppointmentSchema } from './schemas/appointment.schema';
+import { UserModule } from 'src/user/user.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { Appointment, AppointmentSchema } from './schemas/appointment.schema';
         schema: AppointmentSchema,
       },
     ]),
+    UserModule,
   ],
   controllers: [AppointmentsController],
   providers: [AppointmentsService],

@@ -50,6 +50,6 @@ export class AppointmentsController {
   @UseGuards(AuthGuard('jwt')) // ใช้ JWT ก่อน แล้วเช็ค Role
   @Delete(':id')
   remove(@Param('id') id: string, @Request() req) {
-    return this.appointmentsService.delete(id, req);
+    return this.appointmentsService.delete(id, req.user);
   }
 }
