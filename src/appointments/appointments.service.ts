@@ -23,8 +23,32 @@ export class AppointmentsService {
     user: any,
   ): Promise<Appointment> {
     if (user.hasAppointment) {
-      throw new NotFoundException(`user already has an appointment.`);
+      throw new NotFoundException(`User already has an appointment.`);
     }
+    if (user.role != 'admin') {
+      if (createAppointmentDto.user_email != user.email) {
+        throw new NotFoundException(`You can create only your appointment.`);
+      }
+    }
+
+    const appointmentDate = new Date(createAppointmentDto.appointment_date);
+
+    const existingAppointment = await this.appointmentModel
+      .findOne({
+        appointment_date: {
+          $gte: new Date(appointmentDate.setHours(0, 0, 0, 0)),
+          $lt: new Date(appointmentDate.setHours(23, 59, 59, 999)),
+        },
+        appointment_time: createAppointmentDto.appointment_time,
+      })
+      .exec();
+
+    if (existingAppointment) {
+      throw new NotFoundException(
+        'This time is not available. Please select another time.',
+      );
+    }
+
     const createdAppointment = new this.appointmentModel(createAppointmentDto);
     return createdAppointment.save();
   }
@@ -65,6 +89,30 @@ export class AppointmentsService {
       if (appointment.user_email != user.email) {
         throw new NotFoundException(
           `Appointment with ID ${id} is not your appointment!`,
+        );
+      }
+    }
+
+    if (
+      updateAppointmentDto.appointment_date &&
+      updateAppointmentDto.appointment_time
+    ) {
+      const appointmentDate = new Date(updateAppointmentDto.appointment_date);
+
+      const existingAppointment = await this.appointmentModel
+        .findOne({
+          appointment_date: {
+            $gte: new Date(appointmentDate.setHours(0, 0, 0, 0)),
+            $lt: new Date(appointmentDate.setHours(23, 59, 59, 999)),
+          },
+          appointment_time: updateAppointmentDto.appointment_time,
+          _id: { $ne: id }, // Exclude the current appointment from the check
+        })
+        .exec();
+
+      if (existingAppointment) {
+        throw new NotFoundException(
+          'This time is not available. Please select another time.',
         );
       }
     }

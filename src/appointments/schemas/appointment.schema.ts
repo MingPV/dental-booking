@@ -19,6 +19,18 @@ export class Appointment {
 
   @Prop()
   dentist_id: string;
+
+  @Prop()
+  status: string;
+
+  @Prop({ type: Date })
+  appointment_date: Date;
+
+  @Prop()
+  appointment_time: string;
+
+  @Prop({ type: Date })
+  created_at: Date;
 }
 
 export const AppointmentSchema = SchemaFactory.createForClass(Appointment);
