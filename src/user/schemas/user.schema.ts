@@ -29,6 +29,12 @@ export class User {
 
   @Prop()
   banUntil: Date;
+
+  @Prop({ type: String, default: null }) // Store 2FA token
+  twoFactorToken: string | null;
+
+  @Prop({ type: Date, default: null }) // Expiration time for token
+  twoFactorExpires: Date | null;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

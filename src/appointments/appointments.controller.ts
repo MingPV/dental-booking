@@ -9,6 +9,7 @@ import {
   Delete,
   UseGuards,
   Request,
+  Query,
 } from '@nestjs/common';
 import { AppointmentsService } from './appointments.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
@@ -23,6 +24,18 @@ export class AppointmentsController {
   @Post()
   create(@Body() createAppointmentDto: CreateAppointmentDto, @Request() req) {
     return this.appointmentsService.create(createAppointmentDto, req.user);
+  }
+
+  @Get('verify-delete')
+  verifyDelete(
+    @Query('token') token: string,
+    @Query('appointmentId') appointmentId: string,
+  ) {
+    // Handle the normal logic for valid appointmentId
+    return this.appointmentsService.verifyDeleteAppointment(
+      token,
+      appointmentId,
+    );
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -47,9 +60,12 @@ export class AppointmentsController {
     return this.appointmentsService.update(id, req.user, updateAppointmentDto);
   }
 
-  @UseGuards(AuthGuard('jwt')) // ใช้ JWT ก่อน แล้วเช็ค Role
+  @UseGuards(AuthGuard('jwt'))
   @Delete(':id')
-  remove(@Param('id') id: string, @Request() req) {
-    return this.appointmentsService.delete(id, req.user);
+  requestDelete(@Param('id') id: string, @Request() req) {
+    if (req.user.role == 'admin') {
+      return this.appointmentsService.delete(id, req.user);
+    }
+    return this.appointmentsService.requestDeleteAppointment(id, req.user);
   }
 }

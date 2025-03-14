@@ -33,4 +33,10 @@ export class UpdateUserDTO {
   @IsDateString()
   @IsOptional()
   readonly banUntil?: Date;
+  @IsString()
+  @IsOptional()
+  readonly twoFactorToken?: string | null;
+  @IsDateString()
+  @IsOptional()
+  readonly twoFactorExpires?: Date | null;
 }

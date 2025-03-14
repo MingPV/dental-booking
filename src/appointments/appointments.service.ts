@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-floating-promises */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
@@ -9,11 +10,13 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import { Appointment, AppointmentDocument } from './schemas/appointment.schema';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
 import { UserService } from 'src/user/user.service';
+import { v4 as uuidv4 } from 'uuid';
+import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class AppointmentsService {
@@ -133,7 +136,7 @@ export class AppointmentsService {
     if (user.role != 'admin') {
       if (!updateAppointmentDto.status) {
         if (
-          appointmentData.status == 'accepted' ||
+          appointmentData.status == 'confirmed' ||
           appointmentData.status == 'completed' ||
           appointmentData.status == 'missed'
         ) {
@@ -231,7 +234,9 @@ export class AppointmentsService {
       throw new NotFoundException(`Appointment with ID ${id} not found`);
     }
 
-    let userData;
+    const userData = await this.userService.findByEmail(
+      updatedAppointment.user_email,
+    );
 
     if (
       (updatedAppointment.status == 'completed' ||
@@ -243,9 +248,6 @@ export class AppointmentsService {
         updateAppointmentDto.status == 'cancelled')
     ) {
       try {
-        userData = await this.userService.findByEmail(
-          updatedAppointment.user_email,
-        );
         if (userData) {
           const updatedUser = await this.userService.updateAppointmentStatus(
             userData.id,
@@ -275,10 +277,37 @@ export class AppointmentsService {
       if (missedAppointmentsCount >= 3) {
         const banUntil = new Date();
         banUntil.setDate(banUntil.getDate() + 30);
+        if (userData) {
+          await this.userService.update(userData.id, user, {
+            isBanned: true,
+            banUntil,
+          });
+        }
+      }
+    }
 
-        await this.userService.update(userData.id, user, {
-          isBanned: true,
-          banUntil,
+    if (
+      updatedAppointment.status == 'confirmed' &&
+      updateAppointmentDto.status == 'confirmed'
+    ) {
+      // Count missed appointments in the last 6 months
+      const transporter = nodemailer.createTransport({
+        service: 'Gmail',
+        auth: {
+          user: process.env.SENDER_EMAIL,
+          pass: process.env.SENDER_PASSWORD,
+        },
+      });
+
+      if (userData) {
+        await transporter.sendMail({
+          from: process.env.SENDER_EMAIL,
+          to: userData.email,
+          subject: 'Your Appointment Has Been Confirmed!',
+          html: `<p>We are pleased to inform you that your appointment has been confirmed!</p>
+                 <p>Please ensure to arrive on time for your appointment. If you need to reschedule or have any questions, feel free to contact us.</p>
+                 <p>doctor.stone@gmail.com</p>
+                 <p>088xxx8888</p>`,
         });
       }
     }
@@ -314,5 +343,71 @@ export class AppointmentsService {
         'An error occurred during deletion',
       );
     }
+  }
+
+  async requestDeleteAppointment(appointmentId: string, user: any) {
+    const userData = await this.userService.findByEmail(user.email);
+
+    if (!userData) {
+      throw new NotFoundException('User not found.');
+    }
+
+    const token = uuidv4(); // Generate unique token
+    const expirationTime = new Date();
+    expirationTime.setMinutes(expirationTime.getMinutes() + 10); // Token expires in 10 min
+
+    await this.userService.update(userData.id, user, {
+      twoFactorToken: token,
+      twoFactorExpires: expirationTime,
+    });
+
+    const verificationLink = `http://localhost:4000/appointments/verify-delete?token=${token}&appointmentId=${appointmentId}`;
+
+    const transporter = nodemailer.createTransport({
+      service: 'Gmail',
+      auth: {
+        user: process.env.SENDER_EMAIL,
+        pass: process.env.SENDER_PASSWORD,
+      },
+    });
+
+    await transporter.sendMail({
+      from: process.env.SENDER_EMAIL,
+      to: userData.email,
+      subject: 'Appointment Deletion Verification',
+      html: `<p>Click the link below to verify your appointment deletion:</p>
+             <a href="${verificationLink}">${verificationLink}</a>
+             <p>This link expires in 10 minutes.</p>`,
+    });
+
+    return { message: '2FA verification email sent.' };
+  }
+
+  async verifyDeleteAppointment(token: string, appointmentId: string) {
+    if (!mongoose.Types.ObjectId.isValid(appointmentId)) {
+      throw new Error('Invalid appointmentId');
+    }
+    const user = await this.userService.findOneByToken(token);
+
+    if (!user || !user.twoFactorExpires || user.twoFactorExpires < new Date()) {
+      throw new BadRequestException('Invalid or expired 2FA token.');
+    }
+
+    const result = await this.appointmentModel
+      .findByIdAndDelete(appointmentId)
+      .exec();
+    if (!result) {
+      throw new NotFoundException(
+        `Appointment with ID ${appointmentId} not found`,
+      );
+    }
+    const userData = await this.userService.findByEmail(result.user_email);
+    if (result.status == 'pending' || result.status == 'confirmed') {
+      if (userData) {
+        this.userService.updateAppointmentStatus(userData.id, false);
+      }
+    }
+
+    return { message: 'Appointment deleted successfully.' };
   }
 }

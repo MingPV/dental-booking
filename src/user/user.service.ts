@@ -23,6 +23,14 @@ export class UserService {
     return await this.userModel.findOne({ email }).exec();
   }
 
+  async findOneByToken(token: string): Promise<UserDocument | null> {
+    const user = await this.userModel.findOne({ twoFactorToken: token }).exec();
+    if (!user) {
+      throw new NotFoundException(`User with token ${token} not found`);
+    }
+    return user;
+  }
+
   async updateAppointmentStatus(
     userId: string,
     status: boolean,
