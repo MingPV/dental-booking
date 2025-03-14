@@ -1,4 +1,10 @@
-import { IsString, IsOptional, IsEmail, IsBoolean } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsEmail,
+  IsBoolean,
+  IsDateString,
+} from 'class-validator';
 
 export class RegisterDTO {
   @IsEmail()
@@ -14,4 +20,10 @@ export class RegisterDTO {
   readonly role: string;
   @IsBoolean()
   readonly hasAppointment: string;
+  @IsBoolean()
+  @IsOptional()
+  readonly isBanned?: boolean;
+  @IsDateString()
+  @IsOptional()
+  readonly banUntil?: Date;
 }

@@ -6,6 +6,7 @@ import {
   Injectable,
   NotFoundException,
   InternalServerErrorException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -36,11 +37,22 @@ export class AppointmentsService {
     if (!userData) {
       throw new NotFoundException(`User with email ${user.email} not found.`);
     }
-    if (userData?.hasAppointment) {
+    if (userData.isBanned) {
+      throw new NotFoundException(
+        `Your account is locked because you miss 3 appointments in last 6 month. Your account will be unlocked at ${userData.banUntil.toString()}`,
+      );
+    }
+    if (userData.hasAppointment) {
       throw new NotFoundException(`User already has an appointment.`);
     }
 
     const appointmentDate = new Date(createAppointmentDto.appointment_date);
+    const now = new Date();
+
+    // Ensure the date is in the future
+    if (appointmentDate < new Date(now.setHours(0, 0, 0, 0))) {
+      throw new BadRequestException('Appointment date cannot be in the past.');
+    }
 
     const existingAppointment = await this.appointmentModel
       .findOne({
@@ -219,6 +231,8 @@ export class AppointmentsService {
       throw new NotFoundException(`Appointment with ID ${id} not found`);
     }
 
+    let userData;
+
     if (
       (updatedAppointment.status == 'completed' ||
         updatedAppointment.status == 'missed' ||
@@ -229,7 +243,7 @@ export class AppointmentsService {
         updateAppointmentDto.status == 'cancelled')
     ) {
       try {
-        const userData = await this.userService.findByEmail(
+        userData = await this.userService.findByEmail(
           updatedAppointment.user_email,
         );
         if (userData) {
@@ -240,6 +254,32 @@ export class AppointmentsService {
         }
       } catch {
         throw new NotFoundException("Can't update user appointment status.");
+      }
+    }
+
+    if (
+      updatedAppointment.status == 'missed' &&
+      updateAppointmentDto.status == 'missed'
+    ) {
+      // Count missed appointments in the last 6 months
+      const sixMonthsAgo = new Date();
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+      const missedAppointmentsCount =
+        await this.appointmentModel.countDocuments({
+          user_email: updatedAppointment.user_email,
+          status: 'missed',
+          appointment_date: { $gte: sixMonthsAgo },
+        });
+
+      if (missedAppointmentsCount >= 3) {
+        const banUntil = new Date();
+        banUntil.setDate(banUntil.getDate() + 30);
+
+        await this.userService.update(userData.id, user, {
+          isBanned: true,
+          banUntil,
+        });
       }
     }
 

@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsEmail,
   IsBoolean,
+  IsDateString,
 } from 'class-validator';
 
 export class UpdateUserDTO {
@@ -25,5 +26,11 @@ export class UpdateUserDTO {
   readonly role?: string;
   @IsBoolean()
   @IsOptional()
-  readonly hasAppointment?: string;
+  readonly hasAppointment?: boolean;
+  @IsBoolean()
+  @IsOptional()
+  readonly isBanned?: boolean;
+  @IsDateString()
+  @IsOptional()
+  readonly banUntil?: Date;
 }

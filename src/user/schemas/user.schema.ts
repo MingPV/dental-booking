@@ -23,6 +23,12 @@ export class User {
 
   @Prop()
   hasAppointment: boolean;
+
+  @Prop()
+  isBanned: boolean;
+
+  @Prop()
+  banUntil: Date;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
