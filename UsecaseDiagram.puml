@@ -1,0 +1,61 @@
+@startuml
+
+actor User
+actor Admin
+
+package "Auth Module" {
+  usecase "Login" as UC_Login
+  usecase "Logout" as UC_Logout
+}
+
+package "User Module" {
+  usecase "Register" as UC_Register
+  usecase "View Profile" as UC_ViewProfile
+  usecase "Update Profile" as UC_UpdateProfile
+}
+
+package "Appointments Module" {
+  usecase "Create Appointment" as UC_CreateAppointment
+  usecase "View Appointments" as UC_ViewAppointments
+  usecase "Update Appointment" as UC_UpdateAppointment
+  usecase "Cancel Appointment" as UC_CancelAppointment
+  usecase "Delete Appointment" as UC_DeleteAppointment
+  usecase "Request Appointment Cancellation" as UC_RequestCancel
+  usecase "Verify Appointment Cancellation" as UC_VerifyCancel
+}
+
+package "Dentist Module" {
+  usecase "Add Dentist" as UC_AddDentist
+  usecase "View Dentists" as UC_ViewDentists
+  usecase "Update Dentist" as UC_UpdateDentist
+  usecase "Delete Dentist" as UC_DeleteDentist
+}
+
+User --> UC_Login
+User --> UC_Logout
+User --> UC_Register
+User --> UC_ViewProfile
+User --> UC_UpdateProfile
+User --> UC_CreateAppointment
+User --> UC_ViewAppointments
+User --> UC_UpdateAppointment
+User --> UC_RequestCancel
+User --> UC_VerifyCancel
+User --> UC_ViewDentists
+
+Admin --> UC_Login
+Admin --> UC_Logout
+Admin --> UC_Register
+Admin --> UC_ViewProfile
+Admin --> UC_UpdateProfile
+Admin --> UC_AddDentist
+Admin --> UC_ViewDentists
+Admin --> UC_UpdateDentist
+Admin --> UC_DeleteDentist
+Admin --> UC_ViewAppointments
+Admin --> UC_UpdateAppointment
+Admin --> UC_CreateAppointment
+Admin --> UC_DeleteAppointment
+Admin --> UC_CancelAppointment
+
+@enduml
