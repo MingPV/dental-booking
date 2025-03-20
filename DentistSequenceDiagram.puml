@@ -1,0 +1,69 @@
+@startuml
+
+actor User
+participant "NestJS Router" as Router
+participant "AuthGuard (JWT)" as AuthGuard
+participant "RolesGuard" as RolesGuard
+participant "DentistsController" as Controller
+participant "DentistsService" as Service
+participant "Database" as Database
+
+== Create Dentist ==
+User -> Router: POST /dentists (CreateDentistDto)
+Router -> AuthGuard: Validate JWT
+AuthGuard -> RolesGuard: Check admin role
+RolesGuard -> Controller: Forward request
+Controller -> Service: create(createDentistDto)
+Service -> Database: Save new dentist
+Database --> Service: Return saved dentist
+Service --> Controller: Return created dentist
+Controller --> Router: HTTP Response (201 Created, Dentist Data)
+Router --> User: Return created dentist
+
+== Find All Dentists ==
+User -> Router: GET /dentists
+Router -> Controller: Forward request
+Controller -> Service: findAll()
+Service -> Database: Query all dentists
+Database --> Service: Return dentists
+Service --> Controller: Return dentists
+Controller --> Router: HTTP Response (200 OK, Dentists Data)
+Router --> User: Return dentists
+
+== Find One Dentist ==
+User -> Router: GET /dentists/:id
+Router -> Controller: Forward request
+Controller -> Service: findOne(id)
+Service -> Database: Query dentist by ID
+Database --> Service: Return dentist
+Service --> Controller: Return dentist
+Controller --> Router: HTTP Response (200 OK, Dentist Data)
+Router --> User: Return dentist
+
+== Update Dentist ==
+User -> Router: PATCH /dentists/:id (UpdateDentistDto)
+Router -> AuthGuard: Validate JWT
+AuthGuard -> RolesGuard: Check admin role
+RolesGuard -> Controller: Forward request
+Controller -> Service: update(id, updateDentistDto)
+Service -> Database: Query dentist by ID
+Database --> Service: Return dentist
+Service -> Database: Update dentist
+Database --> Service: Return updated dentist
+Service --> Controller: Return updated dentist
+Controller --> Router: HTTP Response (200 OK, Updated Dentist Data)
+Router --> User: Return updated dentist
+
+== Delete Dentist ==
+User -> Router: DELETE /dentists/:id
+Router -> AuthGuard: Validate JWT
+AuthGuard -> RolesGuard: Check admin role
+RolesGuard -> Controller: Forward request
+Controller -> Service: delete(id)
+Service -> Database: Delete dentist by ID
+Database --> Service: Return success
+Service --> Controller: Return success message
+Controller --> Router: HTTP Response (200 OK, Message)
+Router --> User: Return success message
+
+@enduml

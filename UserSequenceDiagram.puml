@@ -1,0 +1,44 @@
+@startuml
+
+actor User
+participant "NestJS Router" as Router
+participant "AuthGuard (JWT)" as AuthGuard
+participant "UserController" as Controller
+participant "UserService" as Service
+participant "Database" as Database
+
+== Register User ==
+User -> Router: POST /users/register (RegisterDTO)
+Router -> Controller: Forward request
+Controller -> Service: create(registerDTO)
+Service -> Database: Save new user
+Database --> Service: Return saved user
+Service --> Controller: Return created user
+Controller --> Router: HTTP Response (201 Created, User Data)
+Router --> User: Return created user
+
+== Get User Profile ==
+User -> Router: GET /users/profile
+Router -> AuthGuard: Validate JWT
+AuthGuard -> Controller: Forward request
+Controller -> Service: findByEmail(req.user.email)
+Service -> Database: Query user by email
+Database --> Service: Return user data
+Service --> Controller: Return user data
+Controller --> Router: HTTP Response (200 OK, User Data)
+Router --> User: Return user profile
+
+== Update User ==
+User -> Router: PATCH /users/:id (UpdateUserDTO)
+Router -> AuthGuard: Validate JWT
+AuthGuard -> Controller: Forward request
+Controller -> Service: update(id, req.user, updateUserDto)
+Service -> Database: Query user by ID
+Database --> Service: Return user data
+Service -> Database: Update user data
+Database --> Service: Return updated user
+Service --> Controller: Return updated user
+Controller --> Router: HTTP Response (200 OK, Updated User Data)
+Router --> User: Return updated user
+
+@enduml

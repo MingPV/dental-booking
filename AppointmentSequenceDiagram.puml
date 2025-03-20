@@ -1,0 +1,105 @@
+@startuml
+
+actor User
+participant "NestJS Router" as Router
+participant "AuthGuard (JWT)" as AuthGuard
+participant "AppointmentsController" as Controller
+participant "AppointmentsService" as Service
+participant "UserService" as UserService
+participant "Database" as Database
+
+== Create Appointment ==
+User -> Router: POST /appointments (CreateAppointmentDto)
+Router -> AuthGuard: Validate JWT
+AuthGuard -> Controller: Forward request
+Controller -> Service: create(createAppointmentDto, user)
+Service -> UserService: findByEmail(user.email)
+UserService -> Database: Query user by email
+Database --> UserService: Return user data
+Service -> Database: Check for existing appointment
+Database --> Service: Return existing appointment (if any)
+Service -> Database: Save new appointment
+Database --> Service: Return saved appointment
+Service --> Controller: Return created appointment
+Controller --> Router: HTTP Response (201 Created, Appointment Data)
+Router --> User: Return created appointment
+
+== Find All Appointments ==
+User -> Router: GET /appointments
+Router -> AuthGuard: Validate JWT
+AuthGuard -> Controller: Forward request
+Controller -> Service: findAll(user)
+Service -> Database: Query appointments by user
+Database --> Service: Return appointments
+Service --> Controller: Return appointments
+Controller --> Router: HTTP Response (200 OK, Appointments Data)
+Router --> User: Return appointments
+
+== Find One Appointment ==
+User -> Router: GET /appointments/:id
+Router -> AuthGuard: Validate JWT
+AuthGuard -> Controller: Forward request
+Controller -> Service: findOne(id, user)
+Service -> Database: Query appointment by ID
+Database --> Service: Return appointment
+Service --> Controller: Return appointment
+Controller --> Router: HTTP Response (200 OK, Appointment Data)
+Router --> User: Return appointment
+
+== Update Appointment ==
+User -> Router: PATCH /appointments/:id (UpdateAppointmentDto)
+Router -> AuthGuard: Validate JWT
+AuthGuard -> Controller: Forward request
+Controller -> Service: update(id, user, updateAppointmentDto)
+Service -> Database: Query appointment by ID
+Database --> Service: Return appointment
+Service -> Database: Update appointment
+Database --> Service: Return updated appointment
+Service --> Controller: Return updated appointment
+Controller --> Router: HTTP Response (200 OK, Updated Appointment Data)
+Router --> User: Return updated appointment
+
+== Request Delete Appointment ==
+User -> Router: DELETE /appointments/:id
+Router -> AuthGuard: Validate JWT
+AuthGuard -> Controller: Forward request
+alt Admin Role
+  Controller -> Service: delete(id, user)
+  Service -> Database: Delete appointment by ID
+  Database --> Service: Return success
+  Service --> Controller: Return success
+else User Role
+  Controller -> Service: requestDeleteAppointment(id, user)
+  Service -> UserService: findByEmail(user.email)
+  UserService -> Database: Query user by email
+  Database --> UserService: Return user data
+  Service -> Database: Save 2FA token and expiration
+  Database --> Service: Return success
+  Service --> Controller: Return success
+end
+Controller --> Router: HTTP Response (200 OK, Message)
+Router --> User: Return success message
+
+== Verify Delete Appointment ==
+User -> Router: GET /appointments/verify-delete?token=...&appointmentId=...
+Router -> Controller: Forward request
+Controller -> Service: verifyDeleteAppointment(token, appointmentId)
+Service -> UserService: findOneByToken(token)
+UserService -> Database: Query user by token
+Database --> UserService: Return user data
+Service -> Database: Query appointment by ID
+Database --> Service: Return appointment data
+alt Valid Token and Appointment
+  Service -> Database: Delete appointment by ID
+  Database --> Service: Return success
+  Service -> UserService: Clear 2FA token and expiration
+  UserService -> Database: Update user data
+  Database --> UserService: Update success
+  Service --> Controller: Return success message
+else Invalid or Expired Token
+  Service --> Controller: Throw BadRequestException
+end
+Controller --> Router: HTTP Response (200 OK or 400 Bad Request)
+Router --> User: Return success or error message
+
+@enduml
