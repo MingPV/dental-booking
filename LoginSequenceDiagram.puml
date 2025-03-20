@@ -31,4 +31,11 @@ Database --> UserService: Update success
 Controller --> Router: Set Cookie (access_token)
 Router --> User: HTTP Response (200 OK, "Successfully logged in")
 
+== User Logout Flow ==
+User -> Router: POST /auth/logout
+Router -> Controller: Forward request
+Controller -> Router: Clear Cookie (access_token)
+Router --> User: HTTP Response (200 OK, "Successfully logged out")
+
+
 @enduml
