@@ -1,0 +1,187 @@
+@startuml
+
+
+
+package "User Module" {
+  class UserController {
+    +register(registerDTO: RegisterDTO): Promise<User>
+    +getProfile(req: Request): Promise<User>
+    +update(id: string, req: Request, updateUserDto: UpdateUserDTO): Promise<User>
+  }
+
+  class UserService {
+    +create(registerDTO: RegisterDTO): Promise<User>
+    +findByEmail(email: string): Promise<UserDocument | null>
+    +findOneByToken(token: string): Promise<UserDocument | null>
+    +updateAppointmentStatus(userId: string, status: boolean): Promise<UserDocument | null>
+    +update(id: string, user: any, updateUserDto: UpdateUserDTO): Promise<UserDocument>
+  }
+
+  class User {
+    +email: string
+    +password: string
+    +name: string
+    +tel: string
+    +role: string
+    +hasAppointment: boolean
+    +isBanned: boolean
+    +banUntil: Date
+    +twoFactorToken: string | null
+    +twoFactorExpires: Date | null
+  }
+
+  class RegisterDTO {
+    +email: string
+    +password: string
+    +name: string
+    +tel?: string
+  }
+
+  class UpdateUserDTO {
+    +name?: string
+    +tel?: string
+    +role?: string
+    +hasAppointment?: boolean
+    +isBanned?: boolean
+    +banUntil?: Date
+  }
+
+  UserController --> UserService
+  UserService --> User
+  UserService --> RegisterDTO
+  UserService --> UpdateUserDTO
+}
+
+package "Appointments Module" {
+  class AppointmentsController {
+    +create(createAppointmentDto: CreateAppointmentDto, req: Request): Promise<Appointment>
+    +findAll(req: Request): Promise<Appointment[]>
+    +findOne(id: string, req: Request): Promise<Appointment>
+    +update(id: string, req: Request, updateAppointmentDto: UpdateAppointmentDto): Promise<Appointment>
+    +requestDelete(id: string, req: Request): Promise<any>
+    +verifyDelete(token: string, appointmentId: string): Promise<any>
+  }
+
+  class AppointmentsService {
+    +create(createAppointmentDto: CreateAppointmentDto, user: any): Promise<Appointment>
+    +findAll(user: any): Promise<Appointment[]>
+    +findOne(id: string, user: any): Promise<Appointment>
+    +update(id: string, user: any, updateAppointmentDto: UpdateAppointmentDto): Promise<Appointment>
+    +delete(id: string, user: any): Promise<{ message: string }>
+    +requestDeleteAppointment(appointmentId: string, user: any): Promise<any>
+    +verifyDeleteAppointment(token: string, appointmentId: string): Promise<any>
+  }
+
+  class Appointment {
+    +name: string
+    +description: string
+    +price: number
+    +user_email: string
+    +dentist_id: string
+    +status: string
+    +appointment_date: Date
+    +appointment_time: string
+    +created_at: Date
+  }
+
+  class CreateAppointmentDto {
+    +name: string
+    +description?: string
+    +price: number
+    +user_email: string
+    +dentist_id: string
+    +status?: string
+    +appointment_date: Date
+    +appointment_time: string
+    +created_at?: Date
+  }
+
+  class UpdateAppointmentDto {
+    +name?: string
+    +description?: string
+    +price?: number
+    +user_email?: string
+    +dentist_id?: string
+    +status?: string
+    +appointment_date?: Date
+    +appointment_time?: string
+    +created_at?: Date
+  }
+
+  AppointmentsController --> AppointmentsService
+  AppointmentsService --> Appointment
+  AppointmentsService --> CreateAppointmentDto
+  AppointmentsService --> UpdateAppointmentDto
+  AppointmentsService --> UserService
+}
+
+package "Auth Module" {
+  class AuthController {
+    +login(req: Request, res: Response): Promise<any>
+    +logout(res: Response): Promise<any>
+  }
+
+  class AuthService {
+    +validateUser(email: string, pass: string): Promise<any>
+    +login(user: any): Promise<{ access_token: string }>
+  }
+
+  class LocalAuthGuard
+  class JwtStrategy {
+    +validate(payload: any): Promise<{ userId: string, email: string, role: string }>
+  }
+
+  class RolesGuard {
+    +canActivate(context: ExecutionContext): boolean
+  }
+
+  AuthController --> AuthService
+  AuthController --> LocalAuthGuard
+  AuthService --> UserService
+  AuthService --> JwtService
+  JwtStrategy --> AuthService
+  RolesGuard --> AuthController
+}
+
+package "Dentist Module" {
+  class DentistsController {
+    +create(createDentistDto: CreateDentistDto): Promise<Dentist>
+    +findAll(): Promise<Dentist[]>
+    +findOne(id: string): Promise<Dentist>
+    +update(id: string, req: Request, updateDentistDto: UpdateDentistDto): Promise<Dentist>
+    +remove(id: string): Promise<{ message: string }>
+  }
+
+  class DentistsService {
+    +create(createDentistDto: CreateDentistDto): Promise<Dentist>
+    +findAll(): Promise<Dentist[]>
+    +findOne(id: string): Promise<Dentist>
+    +update(id: string, updateDentistDto: UpdateDentistDto): Promise<Dentist>
+    +delete(id: string): Promise<{ message: string }>
+  }
+
+  class Dentist {
+    +name: string
+    +experience: number
+    +expertiseArea: string
+  }
+
+  class CreateDentistDto {
+    +name: string
+    +experience: number
+    +expertiseArea: string
+  }
+
+  class UpdateDentistDto {
+    +name?: string
+    +experience?: number
+    +expertiseArea?: string
+  }
+
+  DentistsController --> DentistsService
+  DentistsService --> Dentist
+  DentistsService --> CreateDentistDto
+  DentistsService --> UpdateDentistDto
+}
+
+@enduml
