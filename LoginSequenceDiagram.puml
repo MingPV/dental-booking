@@ -1,0 +1,34 @@
+@startuml
+
+actor User
+participant "NestJS Router" as Router
+participant "LocalAuthGuard" as AuthGuard
+participant "LocalStrategy" as Strategy
+participant "AuthController" as Controller
+participant "AuthService" as AuthService
+participant "UserService" as UserService
+participant "Database" as Database
+
+== User Login Flow ==
+User -> Router: POST /auth/login (email, password)
+Router -> AuthGuard: Validate request
+AuthGuard -> Strategy: validate(email, password)
+Strategy -> AuthService: validateUser(email, password)
+AuthService -> UserService: findByEmail(email)
+UserService -> Database: Query user by email
+Database --> UserService: Return user data
+UserService --> AuthService: Return user data
+AuthService -> AuthService: Compare password (bcrypt)
+AuthService --> Strategy: Return user
+Strategy --> AuthGuard: Authentication Passed
+AuthGuard -> Controller: Forward request
+Controller -> AuthService: login(user)
+AuthService -> AuthService: Generate JWT token
+AuthService --> Controller: Return token
+Controller -> UserService: Update user data (if unbanned)
+UserService -> Database: Update user data
+Database --> UserService: Update success
+Controller --> Router: Set Cookie (access_token)
+Router --> User: HTTP Response (200 OK, "Successfully logged in")
+
+@enduml
