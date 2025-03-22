@@ -301,7 +301,7 @@ export class AppointmentsService {
       if (userData) {
         await transporter.sendMail({
           from: process.env.SENDER_EMAIL,
-          to: userData.email,
+          to: 'jeung.pavee@gmail.com', // change it to userData.email. This only use for testing
           subject: 'Your Appointment Has Been Confirmed!',
           html: `<p>We are pleased to inform you that your appointment has been confirmed!</p>
                  <p>Please ensure to arrive on time for your appointment. If you need to reschedule or have any questions, feel free to contact us.</p>
@@ -372,7 +372,7 @@ export class AppointmentsService {
 
     await transporter.sendMail({
       from: process.env.SENDER_EMAIL,
-      to: userData.email,
+      to: 'jeung.pavee@gmail.com', // change it to userData.email. This only use for testing
       subject: 'Appointment Deletion Verification',
       html: `<p>Click the link below to verify your appointment deletion:</p>
              <a href="${verificationLink}">${verificationLink}</a>
